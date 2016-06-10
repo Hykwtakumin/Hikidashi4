@@ -17,8 +17,8 @@ public class DraggableLayout3 extends ViewGroup {
 
     private ViewDragHelper viewDragHelper;
 
-    private View headerView;
-    private View view;
+    private View handle;
+    private View hikidashi;
 
     private float initialMotionY;
     private float initialMotionX;
@@ -54,7 +54,7 @@ public class DraggableLayout3 extends ViewGroup {
 
             @Override
             public boolean tryCaptureView(View child, int pointerId) {
-                return this.self.headerView == child;
+                return this.self.handle == child;
             }
 
 //            @Override
@@ -68,7 +68,7 @@ public class DraggableLayout3 extends ViewGroup {
             public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
                 this.self.left = left;
                 this.self.dragOffset = (float) left / this.self.dragRange;
-                this.self.view.setAlpha(1 - this.self.dragOffset);
+                this.self.hikidashi.setAlpha(1 - this.self.dragOffset);
                 requestLayout();
             }
 
@@ -103,7 +103,7 @@ public class DraggableLayout3 extends ViewGroup {
             @Override
             public int clampViewPositionHorizontal(View child, int left, int dx) {
                 final int leftBound = getPaddingLeft();
-                final int RightBound = getWidth() - this.self.headerView.getWidth() - this.self.headerView.getPaddingRight();
+                final int RightBound = getWidth() - this.self.handle.getWidth() - this.self.handle.getPaddingRight();
                 return Math.min(Math.max(left, leftBound), RightBound);
             }
         });
@@ -112,8 +112,8 @@ public class DraggableLayout3 extends ViewGroup {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        this.headerView = findViewById(R.id.header3);
-        this.view = findViewById(R.id.view3);
+        this.handle = findViewById(R.id.handle);
+        this.hikidashi = findViewById(R.id.hikidashi);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class DraggableLayout3 extends ViewGroup {
     public void smoothSlideTo(float offset) {
         final int leftBound = getPaddingLeft();
         float x = leftBound + offset * this.dragRange;
-        if (this.viewDragHelper.smoothSlideViewTo(this.headerView, this.headerView.getBottom(), (int) x)) {
+        if (this.viewDragHelper.smoothSlideViewTo(this.handle, this.handle.getLeft(), (int) x)) {
             postInvalidateOnAnimation();
         }
     }
@@ -157,7 +157,7 @@ public class DraggableLayout3 extends ViewGroup {
 
         final float x = event.getX();
         final float y = event.getY();
-        boolean isHeaderViewUnder = false;
+        boolean isHandleUnder = false;
 
 //        switch (action) {
 //            case MotionEvent.ACTION_DOWN: {
@@ -169,12 +169,12 @@ public class DraggableLayout3 extends ViewGroup {
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
                 this.initialMotionX = x;
-                isHeaderViewUnder = this.viewDragHelper.isViewUnder(this.headerView, (int) x, (int) y);
+                isHandleUnder = this.viewDragHelper.isViewUnder(this.handle, (int) y, (int) x);
                 break;
             }
         }
 
-        return this.viewDragHelper.shouldInterceptTouchEvent(event) || isHeaderViewUnder;
+        return this.viewDragHelper.shouldInterceptTouchEvent(event) || isHandleUnder;
     }
 
     @Override
@@ -185,28 +185,28 @@ public class DraggableLayout3 extends ViewGroup {
         final float x = event.getX();
         final float y = event.getY();
 
-        boolean isHeaderViewUnder = this.viewDragHelper.isViewUnder(this.headerView, (int) x, (int) y);
+//        boolean isHeaderViewUnder = this.viewDragHelper.isViewUnder(this.headerView, (int) x, (int) y);
+        boolean isHandleUnder = this.viewDragHelper.isViewUnder(this.handle, (int) y, (int) x);
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
                 //this.initialMotionY = y;
                 this.initialMotionX = x;
                 break;
             }
-
             case MotionEvent.ACTION_UP: {
-                if (isHeaderViewUnder) {
-                    final float dy = y - this.initialMotionY;
+                if (isHandleUnder) {
+                    final float dx = x - this.initialMotionX;
                     final int slop = this.viewDragHelper.getTouchSlop();
-                    if (Math.abs(dy) < Math.abs(slop)) {
+                    if (Math.abs(dx) < Math.abs(slop)) {
                         if (this.dragOffset == 0) {
                             smoothSlideTo(1f);
                         } else {
                             smoothSlideTo(0f);
                         }
                     } else {
-                        float headerViewCenterY = this.headerView.getY() + this.headerView.getHeight() / 2;
+                        float handleCenterX = this.handle.getX() + this.handle.getWidth() / 2;
                         ;
-                        if (headerViewCenterY >= getHeight() / 2) {
+                        if (handleCenterX >= getWidth() / 2) { //スライド判定
                             smoothSlideTo(1f);
                         } else {
                             smoothSlideTo(0f);
@@ -217,16 +217,17 @@ public class DraggableLayout3 extends ViewGroup {
             }
         }
 
-        return isHeaderViewUnder && isViewHit(this.headerView, (int) y) || isViewHit(this.view, (int) y);
+//        return isHeaderViewUnder && isViewHit(this.headerView, (int) y) || isViewHit(this.view, (int) y);
+        return isHandleUnder && isViewHit(this.handle, (int) x) || isViewHit(this.hikidashi, (int) x);
     }
 
-    private boolean isViewHit(View view, int y) {
+    private boolean isViewHit(View view, int x) {
         int[] parentLocation = new int[2];
         this.getLocationOnScreen(parentLocation);
         int[] viewLocation = new int[2];
         view.getLocationOnScreen(viewLocation);
-        int screenY = parentLocation[1] + y;
-        return screenY >= viewLocation[1] && screenY < viewLocation[1] + view.getHeight();
+        int screenX = parentLocation[1] + x;
+        return screenX >= viewLocation[1] && screenX < viewLocation[1] + view.getWidth();
     }
 
     @Override
@@ -238,10 +239,17 @@ public class DraggableLayout3 extends ViewGroup {
                 resolveSizeAndState(maxHeight, heightMeasureSpec, 0));
     }
 
+//    @Override
+//    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+//        this.dragRange = getHeight() - this.headerView.getHeight();
+//        this.headerView.layout(0, this.top, r, this.top + this.headerView.getMeasuredHeight());
+//        this.view.layout(0, this.top + this.headerView.getMeasuredHeight(), r, this.top + b);
+//    }
+    //left,top,right,bottom
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        this.dragRange = getHeight() - this.headerView.getHeight();
-        this.headerView.layout(0, this.top, r, this.top + this.headerView.getMeasuredHeight());
-        this.view.layout(0, this.top + this.headerView.getMeasuredHeight(), r, this.top + b);
+        this.dragRange = this.hikidashi.getWidth();
+        this.handle.layout(r - (this.hikidashi.getMeasuredWidth())-this.handle.getMeasuredWidth(), (getHeight() - this.hikidashi.getMeasuredHeight()), r-this.handle.getMeasuredWidth(), b);
+        this.hikidashi.layout(r-this.handle.getMeasuredWidth(), (getHeight() - this.hikidashi.getMeasuredHeight()), r, b);
     }
 }

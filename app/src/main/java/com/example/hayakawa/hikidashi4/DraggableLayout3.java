@@ -3,28 +3,29 @@ package com.example.hayakawa.hikidashi4;
 /**
  * Created by hayakawa on 2016/06/03.
  */
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.support.v4.widget.ViewDragHelper;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
+    import android.annotation.TargetApi;
+    import android.content.Context;
+    import android.support.v4.widget.ViewDragHelper;
+    import android.util.AttributeSet;
+    import android.view.MotionEvent;
+    import android.view.View;
+    import android.view.ViewGroup;
 
-public class DraggableLayout3 extends ViewGroup {
+    public class DraggableLayout3 extends ViewGroup {
 
-    private static final float SENSITIVITY = 1.0f;
+        private static final float SENSITIVITY = 1.0f;
 
-    private ViewDragHelper viewDragHelper;
+        private ViewDragHelper viewDragHelper;
 
-    private View handle;
-    private View hikidashi;
+        private View handle;
+        private View hikidashi;
 
-    private float initialMotionY;
-    private float initialMotionX;
+        private float initialMotionY;
+        private float initialMotionX;
 
-    private int top;
-    private int left;
+        private int top;
+        private int right;
+        private int left;
 
     private int dragRange;
     private float dragOffset;
@@ -57,54 +58,33 @@ public class DraggableLayout3 extends ViewGroup {
                 return this.self.handle == child;
             }
 
-//            @Override
-//            public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
-//                this.self.top = top;
-//                this.self.dragOffset = (float) top / this.self.dragRange;
-//                this.self.view.setAlpha(1 - this.self.dragOffset);
-//                requestLayout();
-//            }
+            //Viewの位置が変更された場合onViewPositionChangedが呼ばれる。dx,dyは初期状態から移動した距離
             @Override
             public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
-                this.self.left = left;
-                this.self.dragOffset = (float) left / this.self.dragRange;
-                this.self.hikidashi.setAlpha(1 - this.self.dragOffset);
+                this.self.left = left/2;
+                this.self.dragOffset = (float) left/2 / this.self.dragRange;
+//                this.self.hikidashi.setAlpha(1 - this.self.dragOffset);
                 requestLayout();
             }
 
-//            @Override
-//            public void onViewReleased(View releasedChild, float xvel, float yvel) {
-//                int top = getPaddingTop();
-//                if (yvel > 0 || (yvel == 0 && this.self.dragOffset > 0.5f)) {
-//                    top += this.self.dragRange;
-//                }
-//                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getLeft(), top);
-//            }
+
             @Override
             public void onViewReleased(View releasedChild, float xvel, float yvel) {
                 int left = getPaddingLeft();
                 if (xvel > 0 || (xvel == 0 && this.self.dragOffset > 0.5f)) {
                     left += this.self.dragRange;
                 }
-                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getWidth(), left);
+                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getBottom(), left);
             }
 
             @Override
-            public int getViewVerticalDragRange(View child) {
+            public int getViewHorizontalDragRange(View child) {
                 return this.self.dragRange;
             }
 
-//            @Override
-//            public int clampViewPositionVertical(View child, int top, int dy) {
-//                final int topBound = getPaddingTop();
-//                final int bottomBound = getHeight() - this.self.headerView.getHeight() - this.self.headerView.getPaddingBottom();
-//                return Math.min(Math.max(top, topBound), bottomBound);
-//            }
             @Override
             public int clampViewPositionHorizontal(View child, int left, int dx) {
-                final int leftBound = getPaddingLeft();
-                final int RightBound = getWidth() - this.self.handle.getWidth() - this.self.handle.getPaddingRight();
-                return Math.min(Math.max(left, leftBound), RightBound);
+                  return getPaddingRight()-(this.self.handle.getMeasuredWidth() + this.self.hikidashi.getMeasuredWidth());
             }
         });
     }
@@ -129,17 +109,11 @@ public class DraggableLayout3 extends ViewGroup {
         }
     }
 
-//    public void smoothSlideTo(float offset) {
-//        final int topBound = getPaddingTop();
-//        float y = topBound + offset * this.dragRange;
-//        if (this.viewDragHelper.smoothSlideViewTo(this.headerView, this.headerView.getLeft(), (int) y)) {
-//            postInvalidateOnAnimation();
-//        }
-//    }
     public void smoothSlideTo(float offset) {
         final int leftBound = getPaddingLeft();
-        float x = leftBound + offset * this.dragRange;
-        if (this.viewDragHelper.smoothSlideViewTo(this.handle, this.handle.getLeft(), (int) x)) {
+        float y  = leftBound + offset * this.dragRange;
+        //smoothslidetoはchild,childfinalLeft,childfinalTopのパラメーターを持っている
+        if (this.viewDragHelper.smoothSlideViewTo(this.handle, (int) y, this.handle.getTop())){
             postInvalidateOnAnimation();
         }
     }
@@ -158,18 +132,10 @@ public class DraggableLayout3 extends ViewGroup {
         final float x = event.getX();
         final float y = event.getY();
         boolean isHandleUnder = false;
-
-//        switch (action) {
-//            case MotionEvent.ACTION_DOWN: {
-//                this.initialMotionY = y;
-//                isHeaderViewUnder = this.viewDragHelper.isViewUnder(this.headerView, (int) x, (int) y);
-//                break;
-//            }
-//        }
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
                 this.initialMotionX = x;
-                isHandleUnder = this.viewDragHelper.isViewUnder(this.handle, (int) y, (int) x);
+                isHandleUnder = this.viewDragHelper.isViewUnder(this.handle, (int) x, (int) y);
                 break;
             }
         }
@@ -193,9 +159,10 @@ public class DraggableLayout3 extends ViewGroup {
                 this.initialMotionX = x;
                 break;
             }
+            //引き出し判定
             case MotionEvent.ACTION_UP: {
                 if (isHandleUnder) {
-                    final float dx = x - this.initialMotionX;
+                    final float dx = x + this.initialMotionX;
                     final int slop = this.viewDragHelper.getTouchSlop();
                     if (Math.abs(dx) < Math.abs(slop)) {
                         if (this.dragOffset == 0) {
@@ -217,8 +184,7 @@ public class DraggableLayout3 extends ViewGroup {
             }
         }
 
-//        return isHeaderViewUnder && isViewHit(this.headerView, (int) y) || isViewHit(this.view, (int) y);
-        return isHandleUnder && isViewHit(this.handle, (int) x) || isViewHit(this.hikidashi, (int) x);
+        return isHandleUnder && isViewHit(this.handle, (int) y) || isViewHit(this.hikidashi, (int) y);
     }
 
     private boolean isViewHit(View view, int x) {
@@ -239,17 +205,11 @@ public class DraggableLayout3 extends ViewGroup {
                 resolveSizeAndState(maxHeight, heightMeasureSpec, 0));
     }
 
-//    @Override
-//    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-//        this.dragRange = getHeight() - this.headerView.getHeight();
-//        this.headerView.layout(0, this.top, r, this.top + this.headerView.getMeasuredHeight());
-//        this.view.layout(0, this.top + this.headerView.getMeasuredHeight(), r, this.top + b);
-//    }
-    //left,top,right,bottom
+
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        this.dragRange = this.hikidashi.getWidth();
-        this.handle.layout(r - (this.hikidashi.getMeasuredWidth())-this.handle.getMeasuredWidth(), (getHeight() - this.hikidashi.getMeasuredHeight()), r-this.handle.getMeasuredWidth(), b);
-        this.hikidashi.layout(r-this.handle.getMeasuredWidth(), (getHeight() - this.hikidashi.getMeasuredHeight()), r, b);
+        this.dragRange = getWidth() - (this.handle.getMeasuredWidth()+this.hikidashi.getMeasuredWidth());
+        this.handle.layout(this.left,t,(this.left+this.handle.getMeasuredWidth()),b);
+        this.hikidashi.layout((this.left+this.handle.getMeasuredWidth()),t,this.left+r,b);
     }
 }

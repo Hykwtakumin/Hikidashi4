@@ -438,3 +438,47 @@ package com.example.hayakawa.hikidashi4;
 //        this.view.layout(0, this.headerView.getMeasuredHeight(), myWidth, myHeight);
 //    }
 //}
+
+
+//        <?xml version="1.0" encoding="utf-8"?>
+//<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+//        xmlns:tools="http://schemas.android.com/tools"
+//        android:layout_width="match_parent"
+//        android:layout_height="match_parent"
+//        tools:context=".MainActivity3">
+//
+//<TextView
+//android:layout_width="wrap_content"
+//        android:layout_height="wrap_content"
+//        android:text="Hello World!" />
+//
+//<com.goka.drager.DraggableLayout3
+//        android:id="@+id/draggable_layout3"
+//        android:layout_width="wrap_content"
+//        android:layout_height="wrap_content"
+//        android:layout_gravity="bottom|center_horizontal"
+//        android:visibility="visible">
+//
+//<TextView
+//android:id="@+id/header3"
+//        android:layout_width="100dp"
+//        android:layout_height="60dp"
+//        android:background="@android:color/holo_blue_bright"
+//        android:gravity="center"
+//        android:text="header"
+//        android:textColor="@android:color/white"
+//        android:textSize="23sp" />
+//
+//<TextView
+//android:id="@+id/view3"
+//        android:layout_width="200dp"
+//        android:layout_height="100dp"
+//        android:background="@android:color/holo_blue_light"
+//        android:gravity="center"
+//        android:text="content"
+//        android:textColor="@android:color/white"
+//        android:textSize="32sp" />
+//
+//</com.goka.drager.DraggableLayout3>
+//
+//</FrameLayout>

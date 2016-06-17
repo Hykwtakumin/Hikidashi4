@@ -26,9 +26,9 @@
 
         <RelativeLayout
             android:id="@+id/hikidashi"
-            android:layout_width="wrap_content"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
+            android:layout_margin="20dp"
             android:background="#b0ffffff">
         <ImageView
             android:id="@+id/btn1"
@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/btn4"
                 android:layout_margin="1dp"
-                android:text="参加者確認s"
+                android:text="参加者確認"
                 />
         </RelativeLayout>
 

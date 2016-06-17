@@ -62,19 +62,21 @@ package com.example.hayakawa.hikidashi4;
             //ここの値が引っ込む/出っ張る長さに関わっている
             @Override
             public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
-                this.self.left = left/2;
-                this.self.dragOffset = (float) left/2 / this.self.dragRange;
+                this.self.left = left;
+                this.self.dragOffset = (float) left / this.self.dragRange;
 //                this.self.hikidashi.setAlpha(1 - this.self.dragOffset);
                 requestLayout();
             }
 
             @Override
             public void onViewReleased(View releasedChild, float xvel, float yvel) {
-                int left = getPaddingLeft();
+//                int left = getPaddingLeft();
+                int right = getPaddingRight();
                 if (xvel > 0 || (xvel == 0 && this.self.dragOffset > 0.5f)) {
-                    left += this.self.dragRange;
+//                    left += this.self.dragRange;
+                    right -= this.self.dragRange;
                 }
-                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getBottom(), left);
+                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getBottom(), right);
             }
 
             @Override
@@ -85,7 +87,8 @@ package com.example.hayakawa.hikidashi4;
             //引き出した後の座標
             @Override
             public int clampViewPositionHorizontal(View child, int left, int dx) {
-                  return (this.self.handle.getMeasuredWidth() + this.self.hikidashi.getMeasuredWidth());
+
+                  return (this.self.hikidashi.getMeasuredWidth());
             }
         });
     }
@@ -112,19 +115,21 @@ package com.example.hayakawa.hikidashi4;
 
     public void smoothSlideTo(float offset) {
         final int leftBound = getPaddingLeft();
-        float y  = leftBound + offset * this.dragRange;
+        float x  = leftBound + offset * this.dragRange;
         //smoothslidetoはchild,childfinalLeft,childfinalTopのパラメーターを持っている
-        if (this.viewDragHelper.smoothSlideViewTo(this.handle, (int) y, this.handle.getTop())){
+        if (this.viewDragHelper.smoothSlideViewTo(this.handle, (int) x, this.handle.getLeft())){
             postInvalidateOnAnimation();
         }
     }
 
 
 
+        //タッチ追跡イベント
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         final int action = event.getActionMasked();
 
+        //ACTION_DOWN : ボタン押下時イベント
         if (action != MotionEvent.ACTION_DOWN) {
             this.viewDragHelper.cancel();
             return super.onInterceptTouchEvent(event);
@@ -163,8 +168,8 @@ package com.example.hayakawa.hikidashi4;
             //引き出し判定
             case MotionEvent.ACTION_UP: {
                 if (isHandleUnder) {
-                    final float dx = x + this.initialMotionX;
-                    final int slop = this.viewDragHelper.getTouchSlop();
+                    final float dx = x - this.initialMotionX; //指の座標が画面中どこまで来ているのか
+                    final int slop = this.viewDragHelper.getTouchSlop(); //判定閾値
                     if (Math.abs(dx) < Math.abs(slop)) {
                         if (this.dragOffset == 0) {
                             smoothSlideTo(1f);
@@ -172,13 +177,12 @@ package com.example.hayakawa.hikidashi4;
                             smoothSlideTo(0f);
                         }
                     } else {
-                        float handleCenterX = this.handle.getX() + this.handle.getWidth() / 2;
-                        ;
-                        if (handleCenterX >= getWidth() / 2) { //スライド判定
-                            smoothSlideTo(1f);
-                        } else {
-                            smoothSlideTo(1f);
-                        }
+//                        float handleCenterX = (this.handle.getX() + this.handle.getWidth())*0.5f;
+//                        if (handleCenterX >= getWidth() *0.5f) { //スライド判定
+//                            smoothSlideTo(1f);
+//                        } else {
+//                            smoothSlideTo(0f);
+//                        }
                     }
                 }
                 break;
@@ -199,19 +203,43 @@ package com.example.hayakawa.hikidashi4;
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        measureChildren(widthMeasureSpec, heightMeasureSpec);
-        int maxWidth = MeasureSpec.getSize(widthMeasureSpec);
-        int maxHeight = MeasureSpec.getSize(heightMeasureSpec);
-        setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, 0),
-                resolveSizeAndState(maxHeight, heightMeasureSpec, 0));
+//        measureChildren(widthMeasureSpec, heightMeasureSpec);
+//        int maxWidth = MeasureSpec.getSize(widthMeasureSpec);
+//        int maxHeight = MeasureSpec.getSize(heightMeasureSpec);
+//        setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, 0),
+//                resolveSizeAndState(maxHeight, heightMeasureSpec, 0));
+        measureChildren(widthMeasureSpec,heightMeasureSpec);
+            int reqWidth = handle.getMeasuredWidth() + hikidashi.getMeasuredWidth();
+            int reqHeight = Math.max(handle.getMeasuredHeight(), hikidashi.getMeasuredHeight());
+
+        setMeasuredDimension(resolveSizeAndState(reqWidth, widthMeasureSpec, 0),
+                resolveSizeAndState(reqHeight, heightMeasureSpec, 0));
     }
 
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        this.dragRange = getWidth() - (this.handle.getMeasuredWidth()+this.hikidashi.getMeasuredWidth());
-        this.handle.layout(this.left,t,(this.left+this.handle.getMeasuredWidth()),t+this.getMeasuredHeight());
-        this.hikidashi.layout((this.left+this.handle.getMeasuredWidth()),t,this.left+r,b);
+//        this.dragRange = getWidth() - (this.handle.getMeasuredWidth()+this.hikidashi.getMeasuredWidth());
+//        this.handle.layout(this.left,t,(this.left+this.handle.getMeasuredWidth()),t+this.getMeasuredHeight());
+//        this.hikidashi.layout((this.left+this.handle.getMeasuredWidth()),t,this.left+r,b);
+        int myWidth  = l - r;
+        int myHeight = b - t;
+
+        this.dragRange = r - hikidashi.getMeasuredWidth();
+        
+        int handleTop = Math.round(myHeight*0.5f - handle.getMeasuredHeight()*0.5f);
+        int handleBottom = handleTop + handle.getMeasuredHeight();
+
+        
+        int hikidashiTop = Math.round(myHeight*0.5f - hikidashi.getMeasuredHeight()*0.5f);
+        int hikidashiBottom = hikidashiTop + hikidashi.getMeasuredHeight();
+//        int hikidashiLeft = Math.round(myWidth*0.5f - hikidashi.getMeasuredWidth()*0.5f);
+//        int hikidashiRight = hikidashiLeft + hikidashi.getMeasuredWidth();
+        //飛び出過ぎているのはdragRangeとかonViewなんたらのせい
+
+        this.handle.layout(this.left, handleTop, this.left +this.handle.getMeasuredWidth(), handleBottom);
+        this.hikidashi.layout(this.left + this.handle.getMeasuredWidth(),hikidashiTop,this.left + r,hikidashiBottom);
+
     }
 }
 

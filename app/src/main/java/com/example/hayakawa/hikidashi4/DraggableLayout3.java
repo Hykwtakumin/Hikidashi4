@@ -257,28 +257,24 @@ package com.example.hayakawa.hikidashi4;
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-//        this.dragRange = getWidth() - (this.handle.getMeasuredWidth()+this.hikidashi.getMeasuredWidth());
-//        this.handle.layout(this.left,t,(this.left+this.handle.getMeasuredWidth()),t+this.getMeasuredHeight());
-//        this.hikidashi.layout((this.left+this.handle.getMeasuredWidth()),t,this.left+r,b);
-        int myWidth  = l - r;
-        int myHeight = b - t;
+        //原則としてAndroidの座標は左上を原点(0,0)とし、右方向と下方向が正の向きとなる(OpenGL等は異なる場合がある)
+        //この部分のleft,top,right,bottomはDraggableLayout3の座標
+        int myWidth  = l - r;   //DraggableLayout3の"幅"(左端-右端)
+        int myHeight = b - t;   //DraggableLayout3の"高さ"(下端-上端)
 
-        this.dragRange = getWidth();
-        
-        int handleTop = Math.round(myHeight*0.5f - handle.getMeasuredHeight()*0.5f);
-        int handleBottom = handleTop + handle.getMeasuredHeight();
+        this.dragRange = myWidth;
 
-        
-        int hikidashiTop = Math.round(myHeight*0.5f - hikidashi.getMeasuredHeight()*0.5f);
-        int hikidashiBottom = hikidashiTop + hikidashi.getMeasuredHeight();
-//        int hikidashiLeft = Math.round(myWidth*0.5f - hikidashi.getMeasuredWidth()*0.5f);
-//        int hikidashiRight = hikidashiLeft + hikidashi.getMeasuredWidth();
-        //飛び出過ぎているのはdragRangeとかonViewなんたらのせい
 
-//        this.handle.layout(this.handle.getLeft(), handleTop, this.handle.getLeft() +this.handle.getMeasuredWidth(), handleBottom);
-//        this.hikidashi.layout(this.hikidashi.getLeft(),hikidashiTop,this.hikidashi.getLeft()+r,hikidashiBottom);
-        this.handle.layout(0, handleTop, this.left +this.handle.getMeasuredWidth(), handleBottom);
-        this.hikidashi.layout(handle.getMeasuredWidth() + this.handle.getMeasuredWidth(),hikidashiTop,this.left+r,hikidashiBottom);
 
+        int handleTop = Math.round(myHeight*0.5f - handle.getMeasuredHeight()*0.5f);    //handleの上端の座標 = (DraggableLayout3の全高の半分 - handleの全高の半分)
+        int handleBottom = handleTop + handle.getMeasuredHeight(); //handleの下端の座標 = handleの上端の座標 + handleの全高
+
+        //DraggableLayout3の高さ=hikidashiの高さなので恐らく以下は必要ない(0になる筈)
+//        int hikidashiTop = Math.round(myHeight*0.5f - hikidashi.getMeasuredHeight()*0.5f);
+//        int hikidashiBottom = hikidashiTop + hikidashi.getMeasuredHeight();
+
+        //draggableLayout3内部の取ってと引き出しの座標を指定(onMeasure以外の数値は指定不可能)
+        this.handle.layout(0, handleTop, handle.getMeasuredWidth(), handleBottom);    //0(左端),HandleTop(上端),0+handleの幅(右端),HandleBottom(下端)
+        this.hikidashi.layout(handle.getMeasuredWidth(),0,handle.getMeasuredWidth()+hikidashi.getMeasuredWidth(),hikidashi.getMeasuredHeight());    //0+handleの幅(左端),DraggableLayout3の上端=0(上端),0+handleの幅+hikidashiの幅(右端),DraggableLayout3の上端=0+hikidashiの全高(下端)
     }
 }

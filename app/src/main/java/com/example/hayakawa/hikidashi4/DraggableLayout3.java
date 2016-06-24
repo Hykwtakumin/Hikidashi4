@@ -79,12 +79,12 @@ package com.example.hayakawa.hikidashi4;
 //                }
 ////                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getBottom(), right);
 //                this.self.viewDragHelper.settleCapturedViewAt(0,Math.round(getHeight()* 0.5f - handle.getMeasuredHeight()*0.5f));
-                //指が離れた(onReleasedな)Viewがhandleだった場合とhikidashiだった場合で条件分岐をつける
-                if (releasedChild == this.self.handle){
-                    this.self.viewDragHelper.settleCapturedViewAt(0,Math.round((this.self.getMeasuredHeight())* 0.5f - handle.getMeasuredHeight()*0.5f));//handleが上にぶっ飛ぶのを予防
-                }else{
-                    this.self.viewDragHelper.settleCapturedViewAt(handle.getMeasuredWidth(),this.self.getMeasuredHeight());
-                }
+                //どちらのViewから指が離れても、handleにはhandleの、hikidashiにはhikidashiの振る舞いをさせたい
+//                if (releasedChild == this.self.handle){
+//                    this.self.viewDragHelper.settleCapturedViewAt(0,Math.round((this.self.getMeasuredHeight())* 0.5f - handle.getMeasuredHeight()*0.5f));//handleが上にぶっ飛ぶのを予防
+//                }else{
+//                    this.self.viewDragHelper.settleCapturedViewAt(handle.getMeasuredWidth(),this.self.getMeasuredHeight());
+//                }
             }
 
             @Override
@@ -93,6 +93,7 @@ package com.example.hayakawa.hikidashi4;
             }
 
             //縦方向へのドラッグを制限
+            //Viewがhandleだった場合とhikidashiだった場合で条件分岐をつけたい
             @Override
             public int getViewVerticalDragRange(View child) {
                 if (child ==this.self.handle){

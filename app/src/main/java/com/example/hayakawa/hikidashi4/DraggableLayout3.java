@@ -7,6 +7,7 @@ package com.example.hayakawa.hikidashi4;
     import android.content.Context;
     import android.support.v4.widget.ViewDragHelper;
     import android.util.AttributeSet;
+    import android.util.Log;
     import android.view.MotionEvent;
     import android.view.View;
     import android.view.ViewGroup;
@@ -24,6 +25,7 @@ package com.example.hayakawa.hikidashi4;
         private float initialMotionX;
 
         private int top;
+        private int bottom;
         private int right;
         private int left;
 
@@ -55,7 +57,7 @@ package com.example.hayakawa.hikidashi4;
 
             @Override
             public boolean tryCaptureView(View child, int pointerId) {
-                //"handle"と"hikidashi"がViewGroupのChildであった場合にtrue
+                //"handle"と"hikidashi"がViewGroupのChildであった場合にtrueを返す
                 return this.self.handle == child || self.hikidashi == child;
             }
 
@@ -69,14 +71,20 @@ package com.example.hayakawa.hikidashi4;
 
             @Override
             public void onViewReleased(View releasedChild, float xvel, float yvel) {
-//                int left = getPaddingLeft();
-                int right = getPaddingRight();
-                if (xvel > 0 || (xvel == 0 && this.self.dragOffset > 0.5f)) {
-//                    left += this.self.dragRange;
-                    right -= this.self.dragRange;
+////                int left = getPaddingLeft();
+//                int right = getPaddingRight();
+//                if (xvel > 0 || (xvel == 0 && this.self.dragOffset > 0.5f)) {
+////                    left += this.self.dragRange;
+//                    right -= this.self.dragRange;
+//                }
+////                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getBottom(), right);
+//                this.self.viewDragHelper.settleCapturedViewAt(0,Math.round(getHeight()* 0.5f - handle.getMeasuredHeight()*0.5f));
+                //指が離れた(onReleasedな)Viewがhandleだった場合とhikidashiだった場合で条件分岐をつける
+                if (releasedChild == this.self.handle){
+                    this.self.viewDragHelper.settleCapturedViewAt(0,Math.round((this.self.getMeasuredHeight())* 0.5f - handle.getMeasuredHeight()*0.5f));//handleが上にぶっ飛ぶのを予防
+                }else{
+                    this.self.viewDragHelper.settleCapturedViewAt(handle.getMeasuredWidth(),this.self.getMeasuredHeight());
                 }
-//                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getBottom(), right);
-                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getLeft(), releasedChild.getTop());
             }
 
             @Override
@@ -87,21 +95,33 @@ package com.example.hayakawa.hikidashi4;
             //縦方向へのドラッグを制限
             @Override
             public int getViewVerticalDragRange(View child) {
-                return 0;
+                if (child ==this.self.handle){
+                    return Math.round((this.self.getMeasuredHeight())* 0.5f - handle.getMeasuredHeight()*0.5f);
+                }else{
+                    return this.self.getMeasuredHeight();
+                }
             }
 
-
+            //dragした後に固定(clamp)しておく座標(垂直方向/y座標)
             @Override
-            public int clampViewPositionVertical(View handle, int top, int dy) {
+            public int clampViewPositionVertical(View child, int top, int dy) {
                 //return child.getY();これが(0,0)になっていると左上にぶっ飛ぶ
-                return handle.getTop();
+                if (child == this.self.handle){
+                    return Math.round((this.self.getMeasuredHeight())* 0.5f - handle.getMeasuredHeight()*0.5f);
+                }else{
+                    return this.self.getMeasuredHeight();
+                }
             }
 
-            //引き出した後の座標
+            //dragした後に固定(clamp)しておく座標(水平方向/x座標)
             @Override
             public int clampViewPositionHorizontal(View child, int left, int dx) {
-//                  return (this.self.hikidashi.getMeasuredWidth());
-                return getLeft()+handle.getMeasuredWidth();
+//                return getLeft()+handle.getMeasuredWidth();
+                if (child == this.self.handle){
+                    return 0;
+                }else{
+                    return handle.getMeasuredWidth();
+                }
             }
         });
     }
@@ -111,6 +131,7 @@ package com.example.hayakawa.hikidashi4;
         super.onFinishInflate();
         this.handle = findViewById(R.id.handle);
         this.hikidashi = findViewById(R.id.hikidashi);
+        //Log.d("Debug", ""+);
     }
 
     @Override
@@ -257,7 +278,8 @@ package com.example.hayakawa.hikidashi4;
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        //原則としてAndroidの座標は左上を原点(0,0)とし、右方向と下方向が正の向きとなる(OpenGL等は異なる場合がある)
+        //原則としてAndroidの座標は左上を原点(0,0)とし、右方向と下方向が正の向きとなる(OpenGL等は異なる場合がある)ß
+        //Log.d("Debug", ""+);
         //この部分のleft,top,right,bottomはDraggableLayout3の座標
         int myWidth  = l - r;   //DraggableLayout3の"幅"(左端-右端)
         int myHeight = b - t;   //DraggableLayout3の"高さ"(下端-上端)

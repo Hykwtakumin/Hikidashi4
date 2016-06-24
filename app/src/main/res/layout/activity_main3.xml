@@ -6,90 +6,51 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity3">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
-
     <com.example.hayakawa.hikidashi4.DraggableLayout3
         android:id="@+id/draggable_layout3"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|end"
         android:visibility="visible">
 
-        <ImageView
-            android:id="@+id/handle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_teachermenuhandle2x" />
-
-        <RelativeLayout
-            android:id="@+id/hikidashi"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:background="#b0ffffff">
-        <ImageView
-            android:id="@+id/btn1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="1dp"
-            android:src="@drawable/ic_teachermenuexternaldisplayon2x"/>
-            <TextView
-                android:id="@+id/txt1"
+            <ImageView
+                android:id="@+id/handle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/btn1"
-                android:layout_margin="1dp"
+                android:src="@drawable/ic_teachermenuhandle2x" />
+
+
+        <LinearLayout
+            android:id="@+id/hikidashi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#b0ffffff">
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableTop="@drawable/ic_teachermenuexternaldisplayon2x"
                 android:text="外部画面"
                 />
-            <ImageView
-                android:id="@+id/btn2"
+            <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/txt1"
-                android:padding="1dp"
-                android:src="@drawable/ic_personaltunnelunlocked2x"/>
-            <TextView
-                android:id="@+id/txt2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/btn2"
-                android:layout_margin="1dp"
+                android:drawableTop="@drawable/ic_personaltunnelunlocked2x"
                 android:text="生徒間通信"
                 />
-            <ImageView
-                android:id="@+id/btn3"
+            <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/txt2"
-                android:padding="1dp"
-                android:src="@drawable/ic_teachermenuunlocked2x"/>
-            <TextView
-                android:id="@+id/txt3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/btn3"
-                android:layout_margin="1dp"
+                android:drawableTop="@drawable/ic_teachermenuunlocked2x"
                 android:text="操作ロック"
                 />
-            <ImageView
-                android:id="@+id/btn4"
+            <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/txt3"
-                android:padding="1dp"
-                android:src="@drawable/ic_participants2x"/>
-            <TextView
-                android:id="@+id/txt4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/btn4"
-                android:layout_margin="1dp"
+                android:drawableTop="@drawable/ic_participants2x"
                 android:text="参加者確認"
                 />
-        </RelativeLayout>
+        </LinearLayout>
 
     </com.example.hayakawa.hikidashi4.DraggableLayout3>
 

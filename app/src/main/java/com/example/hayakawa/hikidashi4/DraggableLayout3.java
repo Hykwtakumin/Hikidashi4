@@ -64,8 +64,9 @@ package com.example.hayakawa.hikidashi4;
             @Override
             public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
                 this.self.left = left;
-                this.self.dragOffset = (float) left / this.self.dragRange;
+//                this.self.dragOffset = (float) left / this.self.dragRange;
 //                this.self.hikidashi.setAlpha(1 - this.self.dragOffset);
+                Log.d("Debug", "onViewPositionChanged:this.self.left= " + this.self.left);    //0とか-308とか出てきた
                 requestLayout();
             }
 

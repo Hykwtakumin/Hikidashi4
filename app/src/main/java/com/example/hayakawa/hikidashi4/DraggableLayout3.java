@@ -61,11 +61,13 @@ package com.example.hayakawa.hikidashi4;
                 return this.self.handle == child || self.hikidashi == child;
             }
             //Viewの位置が変更された場合
-            //つまり引き出された後?
+            //つまり引き出された状態の座標
+            //smoothslideViewToの移動先()
             @Override
             public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
-                this.self.left = left;
-                this.self.dragOffset = (float) left / this.self.dragRange;
+//                this.self.left = left+hikidashi.getMeasuredWidth();     //引き出された状態=引っ込んた状態+引出しの全幅(?)
+                this.self.left  = right+ (handle.getMeasuredWidth()+hikidashi.getMeasuredWidth());
+//                this.self.dragOffset = (float) left / this.self.dragRange;
 //                this.self.hikidashi.setAlpha(1 - this.self.dragOffset);
                 requestLayout();
             }
@@ -149,6 +151,8 @@ package com.example.hayakawa.hikidashi4;
         }
     }
 
+    //単純なsmoothSlideViewToではない
+        //postInvalidateOnAnimationが今一不明,Invalidate()に関連していると思われる
     public void smoothSlideTo(float offset) {
         //getPaddingLeft Viewの左側の余白を返す(スクロールバー等があった場合それも含めた値が来る?)
         final int leftBound = getPaddingLeft();
@@ -157,9 +161,11 @@ package com.example.hayakawa.hikidashi4;
         //ここのyの値を0にすると上にぶっ飛ぶ(一定の高さを指定する必要がある)
         //postInvalidateOnAnimationとは何か?(Invalidateの後に行われる処理?)
         if (this.viewDragHelper.smoothSlideViewTo(this.handle, (int) x, this.handle.getTop())){
+            //取手が引き出された時
             postInvalidateOnAnimation();
         }
         if (this.viewDragHelper.smoothSlideViewTo(this.hikidashi, (int) x, this.hikidashi.getTop())){
+            //引き出しが引き出された時
             postInvalidateOnAnimation();
         }
     }
@@ -169,7 +175,7 @@ package com.example.hayakawa.hikidashi4;
     public boolean onInterceptTouchEvent(MotionEvent event) {
         final int action = event.getActionMasked();//ポインターIDをマスクしたタッチのID
 
-        //タッチがACTION_DOWNでない場合の処理
+        //タッチがACTION_DOWNではないと判断された場合
         if (action != MotionEvent.ACTION_DOWN) {
             this.viewDragHelper.cancel();
             return super.onInterceptTouchEvent(event);
@@ -279,7 +285,7 @@ package com.example.hayakawa.hikidashi4;
 //        setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, 0),
 //                resolveSizeAndState(maxHeight, heightMeasureSpec, 0));
         measureChildren(widthMeasureSpec,heightMeasureSpec);
-            int reqWidth = handle.getMeasuredWidth() + hikidashi.getMeasuredWidth();
+            int reqWidth = handle.getMeasuredWidth() + hikidashi.getMeasuredWidth()*2;
             int reqHeight = Math.max(handle.getMeasuredHeight(), hikidashi.getMeasuredHeight());
 
         setMeasuredDimension(resolveSizeAndState(reqWidth, widthMeasureSpec, 0),
@@ -289,27 +295,58 @@ package com.example.hayakawa.hikidashi4;
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        //原則としてAndroidの座標は左上を原点(0,0)とし、右方向と下方向が正の向きとなる(OpenGL等は異なる場合がある)ß
-        //Log.d("Debug", ""+);
-        //この部分のleft,top,right,bottomはDraggableLayout3の座標
-        int myWidth  = l - r;   //DraggableLayout3の"幅"(左端-右端)
-        int myHeight = b - t;   //DraggableLayout3の"高さ"(下端-上端)
+//        //原則としてAndroidの座標は左上を原点(0,0)とし、右方向と下方向が正の向きとなる(OpenGL等は異なる場合がある)ß
+//        //Log.d("Debug", ""+);
+//        //この部分のleft,top,right,bottomはDraggableLayout3の座標
+//        int myWidth  = l - r;   //DraggableLayout3の"幅"(左端-右端)
+//        int myHeight = b - t;   //DraggableLayout3の"高さ"(下端-上端)
+//
+//        //単純な範囲のみならず絶対的な座標も含む、指定の仕方によっては落ちる!2016/06/29
+//        //取手と引き出しを含むViewが飛び出たり引っ込んだりするのに必要な面積なので実質的には(myWidth*2)になるはず
+//        this.dragRange = myWidth+(r-myWidth);
+//
+//
+//        //以下は引き出しが出ている状態の位置
+//        int handleTop = Math.round(myHeight*0.5f - handle.getMeasuredHeight()*0.5f);    //handleの上端の座標 = (DraggableLayout3の全高の半分 - handleの全高の半分)
+//        int handleBottom = handleTop + handle.getMeasuredHeight(); //handleの下端の座標 = handleの上端の座標 + handleの全高
+//
+//        //DraggableLayout3の高さ=hikidashiの高さなので恐らく以下は必要ない(0になる筈)
+////        int hikidashiTop = Math.round(myHeight*0.5f - hikidashi.getMeasuredHeight()*0.5f);
+////        int hikidashiBottom = hikidashiTop + hikidashi.getMeasuredHeight();
+//
+//        //draggableLayout3内部の取ってと引き出しの座標を指定(onMeasure以外の数値は指定不可能)
+//        this.handle.layout(0, handleTop, handle.getMeasuredWidth(), handleBottom);    //0(左端),HandleTop(上端),0+handleの幅(右端),HandleBottom(下端)
+//        this.hikidashi.layout(handle.getMeasuredWidth(),0,handle.getMeasuredWidth()+hikidashi.getMeasuredWidth(),hikidashi.getMeasuredHeight());    //0+handleの幅(左端),DraggableLayout3の上端=0(上端),0+handleの幅+hikidashiの幅(右端),DraggableLayout3の上端=0+hikidashiの全高(下端)
 
-        //単純な範囲のみならず絶対的な座標も含む、指定の仕方によっては落ちる!2016/06/29
-        //取手と引き出しを含むViewが飛び出たり引っ込んだりするのに必要な面積なので実質的には(myWidth*2)になるはず
-        this.dragRange = myWidth+(r-myWidth);
+        //↑onLinearLayoutブランチの記述
+        //onLayoutで記述する位置はonViewPositionChangedの前の位置であると推測される
+        //よって引っ込んでいる状態のLayoutを記述していく
+
+        int myWidth = r - l;
+        int myHeight = b - t;
+
+        this.dragRange = myWidth;   //取手+引出しの出たり入ったり分はonMeasure部分に記述済
+
+        int handleTop = Math.round(myHeight*0.5f - handle.getMeasuredHeight()*0.5f);
+        int handleBottom = handleTop + handle.getMeasuredHeight();
+
+        int handleLeft = l+hikidashi.getMeasuredWidth();    //引っ込んでいる時の取手の左端
+        int handleRight = handleLeft + handle.getMeasuredWidth();   //同じく右端
 
 
-        //以下は引き出しが出ている状態の位置
-        int handleTop = Math.round(myHeight*0.5f - handle.getMeasuredHeight()*0.5f);    //handleの上端の座標 = (DraggableLayout3の全高の半分 - handleの全高の半分)
-        int handleBottom = handleTop + handle.getMeasuredHeight(); //handleの下端の座標 = handleの上端の座標 + handleの全高
+        //数値計測用
+//        Log.d("Debug", "handleTop:" + handleTop);   //336
+//        Log.d("Debug", "handleBottom"+ handleBottom);   //456
+//        Log.d("Debug", "r"+ r); //720
+//        Log.d("Debug", "l"+ l); //224
+//        Log.d("Debug", "t"+ t); //163
+//        Log.d("Debug", "b"+ b); //995
+//        Log.d("Debug", "myWidth"+ myWidth); //496
+//        Log.d("Debug", "handle.getMeasuredWidth"+ handle.getMeasuredWidth());           //120らしい
+//        Log.d("Debug", "hikidashi.getMeasuredWidth"+ hikidashi.getMeasuredWidth());   //188
 
-        //DraggableLayout3の高さ=hikidashiの高さなので恐らく以下は必要ない(0になる筈)
-//        int hikidashiTop = Math.round(myHeight*0.5f - hikidashi.getMeasuredHeight()*0.5f);
-//        int hikidashiBottom = hikidashiTop + hikidashi.getMeasuredHeight();
+        this.handle.layout(handleLeft, handleTop, handleRight, handleBottom); //引っ込んた状態の取手の座標
+        this.hikidashi.layout(handleRight, 0, handleRight+hikidashi.getMeasuredWidth(),hikidashi.getMeasuredHeight()); //同じく引き出しの座標
 
-        //draggableLayout3内部の取ってと引き出しの座標を指定(onMeasure以外の数値は指定不可能)
-        this.handle.layout(0, handleTop, handle.getMeasuredWidth(), handleBottom);    //0(左端),HandleTop(上端),0+handleの幅(右端),HandleBottom(下端)
-        this.hikidashi.layout(handle.getMeasuredWidth(),0,handle.getMeasuredWidth()+hikidashi.getMeasuredWidth(),hikidashi.getMeasuredHeight());    //0+handleの幅(左端),DraggableLayout3の上端=0(上端),0+handleの幅+hikidashiの幅(右端),DraggableLayout3の上端=0+hikidashiの全高(下端)
     }
 }

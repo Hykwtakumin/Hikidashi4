@@ -69,6 +69,7 @@ package com.example.hayakawa.hikidashi4;
                 this.self.left  = right+ (handle.getMeasuredWidth()+hikidashi.getMeasuredWidth());
 //                this.self.dragOffset = (float) left / this.self.dragRange;
 //                this.self.hikidashi.setAlpha(1 - this.self.dragOffset);
+                //draggableRange
                 requestLayout();
             }
 
@@ -122,7 +123,7 @@ package com.example.hayakawa.hikidashi4;
             public int clampViewPositionHorizontal(View child, int left, int dx) {
 //                return getLeft()+handle.getMeasuredWidth();
                 if (child == this.self.handle){
-                    return 0;
+                    return left;    //これでViewの左端となるか?
                 }else{
                     return handle.getMeasuredWidth();
                 }
@@ -162,6 +163,7 @@ package com.example.hayakawa.hikidashi4;
         //postInvalidateOnAnimationとは何か?(Invalidateの後に行われる処理?)
         if (this.viewDragHelper.smoothSlideViewTo(this.handle, (int) x, this.handle.getTop())){
             //取手が引き出された時
+            Log.d("Debug", "handlesmoothSlideTo: " + x);
             postInvalidateOnAnimation();
         }
         if (this.viewDragHelper.smoothSlideViewTo(this.hikidashi, (int) x, this.hikidashi.getTop())){
@@ -285,7 +287,7 @@ package com.example.hayakawa.hikidashi4;
 //        setMeasuredDimension(resolveSizeAndState(maxWidth, widthMeasureSpec, 0),
 //                resolveSizeAndState(maxHeight, heightMeasureSpec, 0));
         measureChildren(widthMeasureSpec,heightMeasureSpec);
-            int reqWidth = handle.getMeasuredWidth() + hikidashi.getMeasuredWidth()*2;
+            int reqWidth = handle.getMeasuredWidth() + hikidashi.getMeasuredWidth();
             int reqHeight = Math.max(handle.getMeasuredHeight(), hikidashi.getMeasuredHeight());
 
         setMeasuredDimension(resolveSizeAndState(reqWidth, widthMeasureSpec, 0),

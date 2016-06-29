@@ -60,7 +60,8 @@ package com.example.hayakawa.hikidashi4;
                 //"handle"と"hikidashi"がViewGroupのChildであった場合にtrueを返す
                 return this.self.handle == child || self.hikidashi == child;
             }
-
+            //Viewの位置が変更された場合
+            //つまり引き出された後?
             @Override
             public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
                 this.self.left = left;
@@ -79,7 +80,7 @@ package com.example.hayakawa.hikidashi4;
 //                }
 ////                this.self.viewDragHelper.settleCapturedViewAt(releasedChild.getBottom(), right);
 //                this.self.viewDragHelper.settleCapturedViewAt(0,Math.round(getHeight()* 0.5f - handle.getMeasuredHeight()*0.5f));
-                //どちらのViewから指が離れても、handleにはhandleの、hikidashiにはhikidashiの振る舞いをさせたい
+//                //どちらのViewから指が離れても、handleにはhandleの、hikidashiにはhikidashiの振る舞いをさせたい
 //                if (releasedChild == this.self.handle){
 //                    this.self.viewDragHelper.settleCapturedViewAt(0,Math.round((this.self.getMeasuredHeight())* 0.5f - handle.getMeasuredHeight()*0.5f));//handleが上にぶっ飛ぶのを予防
 //                }else{
@@ -123,6 +124,7 @@ package com.example.hayakawa.hikidashi4;
                 }else{
                     return handle.getMeasuredWidth();
                 }
+
             }
         });
     }
@@ -132,7 +134,6 @@ package com.example.hayakawa.hikidashi4;
         super.onFinishInflate();
         this.handle = findViewById(R.id.handle);
         this.hikidashi = findViewById(R.id.hikidashi);
-        //Log.d("Debug", ""+);
     }
 
     @Override
@@ -149,10 +150,12 @@ package com.example.hayakawa.hikidashi4;
     }
 
     public void smoothSlideTo(float offset) {
+        //getPaddingLeft Viewの左側の余白を返す(スクロールバー等があった場合それも含めた値が来る?)
         final int leftBound = getPaddingLeft();
         float x  = leftBound + offset * this.dragRange;
         //smoothslidetoはchild,childfinalLeft,childfinalTopのパラメーター
         //ここのyの値を0にすると上にぶっ飛ぶ(一定の高さを指定する必要がある)
+        //postInvalidateOnAnimationとは何か?(Invalidateの後に行われる処理?)
         if (this.viewDragHelper.smoothSlideViewTo(this.handle, (int) x, this.handle.getTop())){
             postInvalidateOnAnimation();
         }
@@ -161,14 +164,12 @@ package com.example.hayakawa.hikidashi4;
         }
     }
 
-
-
-        //タッチ追跡イベント
+        //タッチイベントを子Viewへ流かどうかを牛耳る(Trueを返すと子Viewへのイベントが止まる)
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
-        final int action = event.getActionMasked();
+        final int action = event.getActionMasked();//ポインターIDをマスクしたタッチのID
 
-        //ACTION_DOWN : ボタン押下時イベント
+        //タッチがACTION_DOWNでない場合の処理
         if (action != MotionEvent.ACTION_DOWN) {
             this.viewDragHelper.cancel();
             return super.onInterceptTouchEvent(event);
@@ -176,9 +177,13 @@ package com.example.hayakawa.hikidashi4;
 
         final float x = event.getX();
         final float y = event.getY();
+        //isViewUnder 親Viewから与えられた座標に子viewの位置を決定する
         boolean isHandleUnder = false;
         boolean isHikidashiUnder = false;
         switch (action) {
+            //ACTION_DOWN : ボタン押下時イベント
+            //ダブルタップ時の動作は要検証
+            //引き出しView自体のタッチ判定と引き出し内部のボタンのタッチ判定が重複している可能性がある
             case MotionEvent.ACTION_DOWN: {
                 this.initialMotionX = x;
                 isHandleUnder = this.viewDragHelper.isViewUnder(this.handle, (int) x, handle.getTop());
@@ -189,62 +194,67 @@ package com.example.hayakawa.hikidashi4;
 
         return this.viewDragHelper.shouldInterceptTouchEvent(event) || isHandleUnder || isHikidashiUnder;
     }
-
+    //タッチイベントに対して何かを処理するメソッド
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        //親Viewから受けとったタッチイベントを処理する
         this.viewDragHelper.processTouchEvent(event);
-
+        //ポインターIDをマスクしたタッチのID
         final int action = event.getActionMasked();
         final float x = event.getX();
         final float y = event.getY();
 
 //        boolean isHeaderViewUnder = this.viewDragHelper.isViewUnder(this.headerView, (int) x, (int) y);
+        //ここでもisViewUnderを宣言しているのは
         boolean isHandleUnder = this.viewDragHelper.isViewUnder(this.handle, (int) x, handle.getTop());
         boolean isHikidashiUnder = this.viewDragHelper.isViewUnder(this.hikidashi,(int) x,hikidashi.getTop());
         switch (action) {
+            //ACTION_DOWNの場合
             case MotionEvent.ACTION_DOWN: {
                 //this.initialMotionY = y;
                 this.initialMotionX = x;
                 break;
             }
-            //引き出し判定
+            //ACTION_UP(指を画面から離す)の場合
             case MotionEvent.ACTION_UP: {
                 if (isHandleUnder) {
-                    final float dx = x - this.initialMotionX; //指の座標が画面中どこまで来ているのか
-                    final int slop = this.viewDragHelper.getTouchSlop(); //判定閾値
-                    if (Math.abs(dx) < Math.abs(slop)) {
-                        if (this.dragOffset == 0) {
-                            smoothSlideTo(1f);
+                    //isViewUnderがTrueだった場合
+                    final float dx = x - this.initialMotionX; //指のx座標が画面中あるのか
+                    final int slop = this.viewDragHelper.getTouchSlop(); //Drag操作判定に満たない小さな移動
+                    if (Math.abs(dx) < Math.abs(slop)) {    //タッチがDrag操作判定に引っかからなかった場合
+                        if (this.dragOffset == 0) { //dragOffset(left/dragRange)が0だった場合
+                            smoothSlideTo(1f);  //1fとか0fとかはoffsetと呼ばれるものだが詳細はまだ不明
                         } else {
                             smoothSlideTo(0f);
                         }
                     } else {
-//                        float handleCenterX = (this.handle.getX() + this.handle.getWidth())*0.5f;
-//                        if (handleCenterX >= getWidth() *0.5f) { //スライド判定
-//                            smoothSlideTo(1f);
-//                        } else {
-//                            smoothSlideTo(0f);
-//                        }
-                    }
-                }
-                if (isHikidashiUnder) {
-                    final float dx = x - this.initialMotionX; //指の座標が画面中どこまで来ているのか
-                    final int slop = this.viewDragHelper.getTouchSlop(); //判定閾値
-                    if (Math.abs(dx) < Math.abs(slop)) {
-                        if (this.dragOffset == 0) {
+                        float handleCenterX = (this.handle.getX() + this.handle.getWidth())*0.5f;
+                        if (handleCenterX >= getWidth() *0.5f) { //スライド中のハンドルの中央の座標がハンドルの幅の半分よりも多く移動していた場合
                             smoothSlideTo(1f);
                         } else {
                             smoothSlideTo(0f);
                         }
-                    } else {
-//                        float handleCenterX = (this.handle.getX() + this.handle.getWidth())*0.5f;
-//                        if (handleCenterX >= getWidth() *0.5f) { //スライド判定
+                    }
+                }
+                //取手と引き出しとで動作を分けるべきか否か
+//                if (isHikidashiUnder) {
+//                    final float dx = x - this.initialMotionX; //指の座標が画面中どこまで来ているのか
+//                    final int slop = this.viewDragHelper.getTouchSlop(); //判定閾値
+//                    if (Math.abs(dx) < Math.abs(slop)) {
+//                        if (this.dragOffset == 0) {
 //                            smoothSlideTo(1f);
 //                        } else {
 //                            smoothSlideTo(0f);
 //                        }
-                    }
-                }
+//                    } else {
+////                        float handleCenterX = (this.handle.getX() + this.handle.getWidth())*0.5f;
+////                        if (handleCenterX >= getWidth() *0.5f) { //スライド判定
+////                            smoothSlideTo(1f);
+////                        } else {
+////                            smoothSlideTo(0f);
+////                        }
+//                    }
+//                }
                 break;
             }
         }
@@ -285,10 +295,12 @@ package com.example.hayakawa.hikidashi4;
         int myWidth  = l - r;   //DraggableLayout3の"幅"(左端-右端)
         int myHeight = b - t;   //DraggableLayout3の"高さ"(下端-上端)
 
-        this.dragRange = myWidth;
+        //単純な範囲のみならず絶対的な座標も含む、指定の仕方によっては落ちる!2016/06/29
+        //取手と引き出しを含むViewが飛び出たり引っ込んだりするのに必要な面積なので実質的には(myWidth*2)になるはず
+        this.dragRange = myWidth+(r-myWidth);
 
 
-
+        //以下は引き出しが出ている状態の位置
         int handleTop = Math.round(myHeight*0.5f - handle.getMeasuredHeight()*0.5f);    //handleの上端の座標 = (DraggableLayout3の全高の半分 - handleの全高の半分)
         int handleBottom = handleTop + handle.getMeasuredHeight(); //handleの下端の座標 = handleの上端の座標 + handleの全高
 
